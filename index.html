@@ -2,50 +2,70 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Word Sorting Game</title>
+<title>🐄 Cute Farm Word Game</title>
 <style>
-    body {
-        font-family: Arial;
-        text-align: center;
-        background: #f0f8ff;
-    }
-    h1 {
-        color: #333;
-    }
-    .container {
-        display: flex;
-        justify-content: space-around;
-        margin-top: 20px;
-    }
-    .box {
-        width: 30%;
-        min-height: 200px;
-        border: 3px dashed #aaa;
-        border-radius: 10px;
-        padding: 10px;
-        background: #fff;
-    }
-    .word-bank {
-        margin-top: 20px;
-    }
-    .word {
-        display: inline-block;
-        background: #87cefa;
-        padding: 8px;
-        margin: 5px;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-    .selected {
-        background: orange;
-    }
+body {
+    font-family: 'Comic Sans MS', cursive;
+    text-align: center;
+    background: linear-gradient(#e6f7ff, #fff);
+}
+
+h1 {
+    color: #ff7f50;
+}
+
+.container {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.box {
+    width: 30%;
+    min-height: 220px;
+    border-radius: 20px;
+    padding: 10px;
+    background: #ffffff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: 0.3s;
+}
+
+.box:hover {
+    transform: scale(1.05);
+}
+
+.word {
+    display: inline-block;
+    background: #ffd966;
+    padding: 8px 12px;
+    margin: 5px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.word:hover {
+    background: #ffb347;
+    transform: scale(1.1);
+}
+
+.selected {
+    background: #ff7f50 !important;
+    color: white;
+}
+
+.score {
+    font-size: 20px;
+    margin-top: 10px;
+}
 </style>
 </head>
 <body>
 
-<h1>🐄 Word Sorting Game 🐤</h1>
-<p>Step 1: Click a word 👆</p>
-<p>Step 2: Click the correct box 👇</p>
+<h1>🐄 Farm Word Game 🐤</h1>
+<p>Click a word → Click a box!</p>
+
+<div class="score">⭐ Score: <span id="score">0</span></div>
 
 <div class="container">
     <div class="box" onclick="dropWord('animals')">
@@ -64,10 +84,11 @@
     </div>
 </div>
 
-<div class="word-bank" id="wordBank"></div>
+<div id="wordBank"></div>
 
 <script>
 let selectedWord = null;
+let score = 0;
 
 const words = [
     // animals
@@ -79,6 +100,8 @@ const words = [
     {text:"Duck", type:"animals"},
     {text:"Goose", type:"animals"},
     {text:"Insect", type:"animals"},
+    {text:"Pig", type:"animals"},
+    {text:"Horse", type:"animals"},
 
     // actions
     {text:"Feed", type:"actions"},
@@ -89,6 +112,8 @@ const words = [
     {text:"Waddle", type:"actions"},
     {text:"Giggle", type:"actions"},
     {text:"Pull out", type:"actions"},
+    {text:"Run", type:"actions"},
+    {text:"Jump", type:"actions"},
 
     // adjectives
     {text:"Sweet", type:"adjectives"},
@@ -98,12 +123,23 @@ const words = [
     {text:"Brown", type:"adjectives"},
     {text:"Huge", type:"adjectives"},
     {text:"Funny", type:"adjectives"},
-    {text:"Fresh", type:"adjectives"}
+    {text:"Fresh", type:"adjectives"},
+    {text:"Gentle", type:"adjectives"},
+    {text:"Clean", type:"adjectives"}
 ];
 
 const wordBank = document.getElementById("wordBank");
 
-words.forEach((w, index) => {
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+shuffle(words);
+
+words.forEach((w) => {
     const div = document.createElement("div");
     div.className = "word";
     div.innerText = w.text;
@@ -118,18 +154,16 @@ function selectWord(element, word) {
 }
 
 function dropWord(category) {
-    if (!selectedWord) {
-        alert("Please select a word first!");
-        return;
-    }
+    if (!selectedWord) return;
 
     if (selectedWord.word.type === category) {
         document.getElementById(category).appendChild(selectedWord.element);
         selectedWord.element.classList.remove("selected");
         selectedWord = null;
-        alert("✅ Correct!");
+        score++;
+        document.getElementById("score").innerText = score;
     } else {
-        alert("❌ Try again!");
+        alert("Try again!");
     }
 }
 </script>
