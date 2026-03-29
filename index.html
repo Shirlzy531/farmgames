@@ -2,69 +2,79 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>🐄 Cute Farm Word Game</title>
+<title>🐄 Farm Adventure Game</title>
 <style>
 body {
     font-family: 'Comic Sans MS', cursive;
     text-align: center;
-    background: linear-gradient(#e6f7ff, #fff);
+    margin:0;
+    background: linear-gradient(#a8e6cf, #dcedc1);
 }
 
-h1 {
-    color: #ff7f50;
-}
+h1 { color:#ff6f61; }
 
 .container {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
+    display:flex;
+    justify-content:space-around;
+    margin:20px;
 }
 
 .box {
-    width: 30%;
-    min-height: 220px;
-    border-radius: 20px;
-    padding: 10px;
-    background: #ffffff;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    transition: 0.3s;
+    width:30%;
+    min-height:220px;
+    border-radius:20px;
+    background:#fff;
+    box-shadow:0 6px 12px rgba(0,0,0,0.15);
+    padding:10px;
+    transition:0.3s;
 }
 
-.box:hover {
-    transform: scale(1.05);
-}
+.box:hover { transform:scale(1.05); }
 
 .word {
-    display: inline-block;
-    background: #ffd966;
-    padding: 8px 12px;
-    margin: 5px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: 0.2s;
+    display:inline-block;
+    background:#ffd166;
+    padding:10px 14px;
+    margin:6px;
+    border-radius:20px;
+    cursor:pointer;
+    transition:0.2s;
 }
 
-.word:hover {
-    background: #ffb347;
-    transform: scale(1.1);
+.word:hover { transform:scale(1.1); background:#ffb347; }
+.selected { background:#ff6f61 !important; color:white; }
+
+#wordBank { margin-top:20px; }
+
+.score, .level {
+    font-size:20px;
+    margin:5px;
 }
 
-.selected {
-    background: #ff7f50 !important;
-    color: white;
+/* animation */
+@keyframes pop {
+  0%{transform:scale(1);} 
+  50%{transform:scale(1.4);} 
+  100%{transform:scale(1);} 
+}
+.correct { animation: pop 0.4s; }
+
+.star {
+    position:fixed;
+    font-size:24px;
+    animation: float 1s ease-out forwards;
 }
 
-.score {
-    font-size: 20px;
-    margin-top: 10px;
+@keyframes float {
+  from {opacity:1; transform:translateY(0);} 
+  to {opacity:0; transform:translateY(-100px);} 
 }
 </style>
 </head>
 <body>
 
-<h1>🐄 Farm Word Game 🐤</h1>
-<p>Click a word → Click a box!</p>
-
+<h1>🐄 Farm Adventure 🐤</h1>
+<div class="level">Level: <span id="level">1</span></div>
 <div class="score">⭐ Score: <span id="score">0</span></div>
 
 <div class="container">
@@ -89,83 +99,99 @@ h1 {
 <script>
 let selectedWord = null;
 let score = 0;
+let level = 1;
 
-const words = [
-    // animals
+const allWords = {
+1:[
     {text:"Sheep", type:"animals"},
-    {text:"Lamb", type:"animals"},
     {text:"Cow", type:"animals"},
-    {text:"Calf", type:"animals"},
-    {text:"Chicken", type:"animals"},
     {text:"Duck", type:"animals"},
-    {text:"Goose", type:"animals"},
-    {text:"Insect", type:"animals"},
-    {text:"Pig", type:"animals"},
-    {text:"Horse", type:"animals"},
-
-    // actions
-    {text:"Feed", type:"actions"},
-    {text:"Chomp", type:"actions"},
-    {text:"Mix", type:"actions"},
-    {text:"Leap", type:"actions"},
-    {text:"Skip", type:"actions"},
-    {text:"Waddle", type:"actions"},
-    {text:"Giggle", type:"actions"},
-    {text:"Pull out", type:"actions"},
     {text:"Run", type:"actions"},
     {text:"Jump", type:"actions"},
-
-    // adjectives
-    {text:"Sweet", type:"adjectives"},
-    {text:"Slimy", type:"adjectives"},
-    {text:"Beautiful", type:"adjectives"},
     {text:"Soft", type:"adjectives"},
-    {text:"Brown", type:"adjectives"},
-    {text:"Huge", type:"adjectives"},
-    {text:"Funny", type:"adjectives"},
-    {text:"Fresh", type:"adjectives"},
-    {text:"Gentle", type:"adjectives"},
-    {text:"Clean", type:"adjectives"}
-];
+    {text:"Big", type:"adjectives"}
+],
+2:[
+    {text:"Lamb", type:"animals"},
+    {text:"Chicken", type:"animals"},
+    {text:"Goose", type:"animals"},
+    {text:"Skip", type:"actions"},
+    {text:"Waddle", type:"actions"},
+    {text:"Beautiful", type:"adjectives"},
+    {text:"Funny", type:"adjectives"}
+],
+3:[
+    {text:"Calf", type:"animals"},
+    {text:"Insect", type:"animals"},
+    {text:"Horse", type:"animals"},
+    {text:"Giggle", type:"actions"},
+    {text:"Chomp", type:"actions"},
+    {text:"Slimy", type:"adjectives"},
+    {text:"Huge", type:"adjectives"}
+]
+};
 
-const wordBank = document.getElementById("wordBank");
-
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        let j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
+function speak(word){
+    let utter = new SpeechSynthesisUtterance(word);
+    utter.lang = 'en-US';
+    speechSynthesis.speak(utter);
 }
 
-shuffle(words);
-
-words.forEach((w) => {
-    const div = document.createElement("div");
-    div.className = "word";
-    div.innerText = w.text;
-    div.onclick = () => selectWord(div, w);
-    wordBank.appendChild(div);
-});
-
-function selectWord(element, word) {
-    document.querySelectorAll(".word").forEach(w => w.classList.remove("selected"));
-    element.classList.add("selected");
-    selectedWord = {element, word};
+function loadLevel(){
+    document.getElementById('wordBank').innerHTML='';
+    let words = allWords[level];
+    words.forEach(w=>{
+        let div=document.createElement('div');
+        div.className='word';
+        div.innerText=w.text;
+        div.onclick=()=>{
+            speak(w.text);
+            selectWord(div,w);
+        };
+        document.getElementById('wordBank').appendChild(div);
+    });
 }
 
-function dropWord(category) {
-    if (!selectedWord) return;
+function selectWord(el,w){
+    document.querySelectorAll('.word').forEach(x=>x.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedWord={element:el,word:w};
+}
 
-    if (selectedWord.word.type === category) {
+function dropWord(category){
+    if(!selectedWord) return;
+
+    if(selectedWord.word.type===category){
         document.getElementById(category).appendChild(selectedWord.element);
-        selectedWord.element.classList.remove("selected");
-        selectedWord = null;
+        selectedWord.element.classList.remove('selected');
+        selectedWord.element.classList.add('correct');
+
+        // star animation
+        let star=document.createElement('div');
+        star.className='star';
+        star.innerText='⭐';
+        star.style.left=Math.random()*80+'%';
+        star.style.top='50%';
+        document.body.appendChild(star);
+        setTimeout(()=>star.remove(),1000);
+
         score++;
-        document.getElementById("score").innerText = score;
+        document.getElementById('score').innerText=score;
+
+        if(score % 7 ===0 && level<3){
+            level++;
+            document.getElementById('level').innerText=level;
+            alert('🎉 Level Up!');
+            loadLevel();
+        }
+
+        selectedWord=null;
     } else {
-        alert("Try again!");
+        alert('❌ Try again!');
     }
 }
+
+loadLevel();
 </script>
 
 </body>
