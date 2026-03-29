@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>🐄 Farm Drag Game</title>
+<title>🐄 Farm Ultimate Game</title>
 <style>
 body {
     margin:0;
@@ -11,47 +11,7 @@ body {
     background: linear-gradient(#87ceeb 0%, #c1f0a6 60%);
 }
 
-/* sky + clouds */
-.cloud {
-    position:absolute;
-    width:120px;
-    height:60px;
-    background:white;
-    border-radius:50px;
-    opacity:0.8;
-    animation: moveCloud 20s linear infinite;
-}
-
-@keyframes moveCloud {
-    from { left:-150px; }
-    to { left:100%; }
-}
-
-/* grass */
-.grass {
-    position:absolute;
-    bottom:0;
-    width:100%;
-    height:120px;
-    background:#6ecf68;
-}
-
-/* animals (emoji animated) */
-.animal {
-    position:absolute;
-    font-size:40px;
-    animation: bounce 2s infinite;
-}
-
-@keyframes bounce {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
-
-h1 {
-    text-align:center;
-    color:#ff6f61;
-}
+h1 { text-align:center; color:#ff6f61; }
 
 .container {
     display:flex;
@@ -65,7 +25,6 @@ h1 {
     background:white;
     border-radius:20px;
     padding:10px;
-    box-shadow:0 6px 12px rgba(0,0,0,0.2);
 }
 
 .word {
@@ -77,55 +36,82 @@ h1 {
     cursor:grab;
 }
 
-#wordBank {
+#wordBank { position:absolute; bottom:120px; width:100%; text-align:center; }
+
+.animal {
     position:absolute;
-    bottom:130px;
-    width:100%;
-    text-align:center;
+    font-size:40px;
+    cursor:pointer;
+}
+
+.trophy {
+    position:fixed;
+    top:40%;
+    left:40%;
+    font-size:80px;
+    animation: pop 1s;
+}
+
+@keyframes pop {
+    0%{transform:scale(0);} 
+    100%{transform:scale(1);} 
 }
 </style>
 </head>
 <body>
 
-<!-- clouds -->
-<div class="cloud" style="top:50px; animation-duration:25s"></div>
-<div class="cloud" style="top:120px; animation-duration:18s"></div>
+<h1>🐄 Farm Ultimate Game 🐤</h1>
+<div id="level">Level 1</div>
 
-<!-- animals -->
-<div class="animal" style="bottom:100px; left:10%">🐄</div>
-<div class="animal" style="bottom:100px; left:40%">🐑</div>
-<div class="animal" style="bottom:100px; left:70%">🦆</div>
-
-<h1>🐄 Drag & Drop Farm Game</h1>
+<!-- animals clickable -->
+<div class="animal" style="bottom:100px; left:20%" onclick="playSound('cow')">🐄</div>
+<div class="animal" style="bottom:100px; left:50%" onclick="playSound('duck')">🦆</div>
+<div class="animal" style="bottom:100px; left:75%" onclick="playSound('sheep')">🐑</div>
 
 <div class="container">
     <div class="box" ondragover="allowDrop(event)" ondrop="drop(event,'animals')">
-        <h3>🐾 Animals</h3>
-        <div id="animals"></div>
+        <h3>Animals</h3><div id="animals"></div>
     </div>
     <div class="box" ondragover="allowDrop(event)" ondrop="drop(event,'actions')">
-        <h3>🏃 Actions</h3>
-        <div id="actions"></div>
+        <h3>Actions</h3><div id="actions"></div>
     </div>
     <div class="box" ondragover="allowDrop(event)" ondrop="drop(event,'adjectives')">
-        <h3>🎨 Descriptions</h3>
-        <div id="adjectives"></div>
+        <h3>Descriptions</h3><div id="adjectives"></div>
     </div>
 </div>
 
 <div id="wordBank"></div>
-<div class="grass"></div>
 
 <script>
-let words = [
- {text:"Sheep", type:"animals"},
- {text:"Cow", type:"animals"},
- {text:"Duck", type:"animals"},
- {text:"Run", type:"actions"},
- {text:"Jump", type:"actions"},
- {text:"Soft", type:"adjectives"},
- {text:"Big", type:"adjectives"}
-];
+let level=1;
+let correctCount=0;
+let currentWord=null;
+
+const levels={
+1:[{text:"Sheep",type:"animals"},{text:"Run",type:"actions"},{text:"Soft",type:"adjectives"}],
+2:[{text:"Duck",type:"animals"},{text:"Jump",type:"actions"},{text:"Funny",type:"adjectives"}],
+3:[{text:"Cow",type:"animals"},{text:"Chomp",type:"actions"},{text:"Huge",type:"adjectives"}]
+};
+
+function loadLevel(){
+ document.getElementById('wordBank').innerHTML='';
+ document.getElementById('animals').innerHTML='';
+ document.getElementById('actions').innerHTML='';
+ document.getElementById('adjectives').innerHTML='';
+ correctCount=0;
+ document.getElementById('level').innerText='Level '+level;
+
+ levels[level].forEach((w,i)=>{
+  let div=document.createElement('div');
+  div.className='word';
+  div.innerText=w.text;
+  div.id='w'+i;
+  div.draggable=true;
+  div.onclick=()=>speak(w.text);
+  div.ondragstart=(e)=>{currentWord=w;e.dataTransfer.setData('id',div.id)};
+  document.getElementById('wordBank').appendChild(div);
+ });
+}
 
 function speak(word){
  let u=new SpeechSynthesisUtterance(word);
@@ -133,46 +119,49 @@ function speak(word){
  speechSynthesis.speak(u);
 }
 
-const bank=document.getElementById('wordBank');
-
-words.forEach((w,i)=>{
- let div=document.createElement('div');
- div.className='word';
- div.innerText=w.text;
- div.draggable=true;
- div.id='word'+i;
- div.ondragstart=(e)=>drag(e,w);
- div.onclick=()=>speak(w.text);
- bank.appendChild(div);
-});
-
-let currentWord=null;
-
-function drag(ev,word){
- ev.dataTransfer.setData("text", ev.target.id);
- currentWord=word;
+function playSound(animal){
+ let sounds={
+  cow:'moo',
+  duck:'quack',
+  sheep:'baa'
+ };
+ let u=new SpeechSynthesisUtterance(sounds[animal]);
+ speechSynthesis.speak(u);
 }
 
-function allowDrop(ev){ ev.preventDefault(); }
+function allowDrop(e){e.preventDefault();}
 
-function drop(ev,category){
- ev.preventDefault();
- let id=ev.dataTransfer.getData("text");
+function drop(e,category){
+ e.preventDefault();
+ let id=e.dataTransfer.getData('id');
  let el=document.getElementById(id);
 
  if(currentWord.type===category){
-   ev.target.appendChild(el);
-   let star=document.createElement('div');
-   star.innerText='⭐';
-   star.style.position='fixed';
-   star.style.left=ev.clientX+'px';
-   star.style.top=ev.clientY+'px';
-   document.body.appendChild(star);
-   setTimeout(()=>star.remove(),800);
+  e.target.appendChild(el);
+  correctCount++;
+
+  if(correctCount===levels[level].length){
+    showTrophy();
+    if(level<3){level++; setTimeout(loadLevel,1000);} 
+  }
+
  } else {
-   alert('❌ Try again');
+  // bounce back
+  el.style.position='relative';
+  el.style.left='-20px';
+  setTimeout(()=>{el.style.left='0px'},200);
  }
 }
+
+function showTrophy(){
+ let t=document.createElement('div');
+ t.className='trophy';
+ t.innerText='🏆';
+ document.body.appendChild(t);
+ setTimeout(()=>t.remove(),1000);
+}
+
+loadLevel();
 </script>
 
 </body>
